@@ -14,7 +14,7 @@ class RadiusConstraint(GeometricConstraint):
     to deal with this class directly.
     """
 
-    def __init__(self, name, coords, lower, upper, scaled, scale, DVGeo, addToPyOpt):
+    def __init__(self, name, coords, lower, upper, scaled, scale, DVGeo, addToPyOpt, compNames):
         super().__init__(name, len(coords) // 3, lower, upper, scale, DVGeo, addToPyOpt)
 
         self.coords = coords
@@ -22,7 +22,7 @@ class RadiusConstraint(GeometricConstraint):
 
         # First thing we can do is embed the coordinates into DVGeo
         # with the name provided:
-        self.DVGeo.addPointSet(self.coords, self.name)
+        self.DVGeo.addPointSet(self.coords, self.name, compNames=compNames)
 
         # Now get the reference lengths
         self.r0, self.c0 = self.computeCircle(self.coords)
@@ -91,24 +91,24 @@ class RadiusConstraint(GeometricConstraint):
         # Compute the radius of curvature
         A = xi1 * (eta2 - eta3) - eta1 * (xi2 - xi3) + xi2 * eta3 - xi3 * eta2
         B = (
-            (xi1 ** 2 + eta1 ** 2) * (eta3 - eta2)
-            + (xi2 ** 2 + eta2 ** 2) * (eta1 - eta3)
-            + (xi3 ** 2 + eta3 ** 2) * (eta2 - eta1)
+            (xi1**2 + eta1**2) * (eta3 - eta2)
+            + (xi2**2 + eta2**2) * (eta1 - eta3)
+            + (xi3**2 + eta3**2) * (eta2 - eta1)
         )
         C = (
-            (xi1 ** 2 + eta1 ** 2) * (xi2 - xi3)
-            + (xi2 ** 2 + eta2 ** 2) * (xi3 - xi1)
-            + (xi3 ** 2 + eta3 ** 2) * (xi1 - xi2)
+            (xi1**2 + eta1**2) * (xi2 - xi3)
+            + (xi2**2 + eta2**2) * (xi3 - xi1)
+            + (xi3**2 + eta3**2) * (xi1 - xi2)
         )
         D = (
-            (xi1 ** 2 + eta1 ** 2) * (xi3 * eta2 - xi2 * eta3)
-            + (xi2 ** 2 + eta2 ** 2) * (xi1 * eta3 - xi3 * eta1)
-            + (xi3 ** 2 + eta3 ** 2) * (xi2 * eta1 - xi1 * eta2)
+            (xi1**2 + eta1**2) * (xi3 * eta2 - xi2 * eta3)
+            + (xi2**2 + eta2**2) * (xi1 * eta3 - xi3 * eta1)
+            + (xi3**2 + eta3**2) * (xi2 * eta1 - xi1 * eta2)
         )
 
         xiC = -B / 2 / A
         etaC = -C / 2 / A
-        r = np.sqrt((B ** 2 + C ** 2 - 4 * A * D) / 4 / A ** 2)
+        r = np.sqrt((B**2 + C**2 - 4 * A * D) / 4 / A**2)
 
         # Convert center coordinates back
         center = origin + nxi * xiC[:, None] + neta * etaC[:, None]
