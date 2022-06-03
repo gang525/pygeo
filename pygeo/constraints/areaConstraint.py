@@ -80,19 +80,28 @@ class TriangulatedSurfaceConstraint(GeometricConstraint):
         self.perim_length = None
         self.minimum_distance = None
 
-    def getVarNames(self):
+    def getVarNames(self, excludeVarNames=None):
         """
         return the var names relevant to this constraint. By default, this is the DVGeo
         variables, but some constraints may extend this to include other variables.
         """
         if self.DVGeo1 is not None:
-            varnamelist = self.DVGeo1.getVarNames(pyOptSparse=True)
+            varNames = self.DVGeo1.getVarNames(pyOptSparse=True)
             if self.DVGeo2 is not None:
-                varnamelist.extend(self.DVGeo2.getVarNames(pyOptSparse=True))
+                varNames.extend(self.DVGeo2.getVarNames(pyOptSparse=True))
         else:
-            varnamelist = self.DVGeo2.getVarNames(pyOptSparse=True)
+            varNames = self.DVGeo2.getVarNames(pyOptSparse=True)
 
-        return varnamelist
+        # we may want to remove specific dvs from the wrt list
+        if excludeVarNames is not None:
+            # Make sure we have a list to iterate over
+            if isinstance(excludeVarNames, str):
+                excludeVarNames = [excludeVarNames]
+
+            for name in excludeVarNames:
+                varNames.remove(name)
+
+        return varNames
 
     def evalFunctions(self, funcs, config):
         """

@@ -52,12 +52,30 @@ class GeometricConstraint(ABC):
         """
         pass
 
-    def getVarNames(self):
+    def getVarNames(self, excludeVarNames=None):
         """
-        return the var names relevant to this constraint. By default, this is the DVGeo
+        Return the var names relevant to this constraint. By default, this is the DVGeo
         variables, but some constraints may extend this to include other variables.
+
+        Parameters
+        ----------
+        excludeVarNames : str or list
+            Names that are to be excluded from the return list
+
         """
-        return self.DVGeo.getVarNames(pyOptSparse=True)
+
+        varNames = self.DVGeo.getVarNames(pyOptSparse=True)
+
+        # we may want to remove specific dvs from the wrt list
+        if excludeVarNames is not None:
+            # Make sure we have a list to iterate over
+            if isinstance(excludeVarNames, str):
+                excludeVarNames = [excludeVarNames]
+
+            for name in excludeVarNames:
+                varNames.remove(name)
+
+        return varNames
 
     def addConstraintsPyOpt(self, optProb, exclude_wrt=None):
         """
@@ -73,15 +91,7 @@ class GeometricConstraint(ABC):
 
         """
         if self.addToPyOpt:
-            wrt_names = self.getVarNames()
-
-            # we may want to remove specific dvs from the wrt list
-            if exclude_wrt is not None:
-                if isinstance(exclude_wrt, str):
-                    exclude_wrt = [exclude_wrt]
-
-                for name in exclude_wrt:
-                    wrt_names.remove(name)
+            wrt_names = self.getVarNames(exclude_wrt)
 
             optProb.addConGroup(
                 self.name, self.nCon, lower=self.lower, upper=self.upper, scale=self.scale, wrt=wrt_names
