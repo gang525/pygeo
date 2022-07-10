@@ -93,8 +93,13 @@ class AreaMomentsConstraint(GeometricConstraint):
         """
         This function computes the area moments of a section (wing or airfoil section)
         approximated by one or more rectangles.
+
+              /                        /
+        Ixx = | y^2 dx dy    ,   Iyy = | x^2 dx dy    , J = <from book of formulae based on shape>
+              /                        /
         """
         # EJ-: This function should be generalized, such that different approximations can be used. Also, should refactor to include geometric objects.
+        # GN: What is meant by geometric objects? Also, this only works for solid sections, right?
 
         # Initialize output
         Ixx = 0
@@ -142,11 +147,13 @@ class AreaMomentsConstraint(GeometricConstraint):
             xc += xc_rect * area_rect
             yc += yc_rect * area_rect
 
-            # Second moments of area about global coordinates
+            # Second moments of area about global coordinates via parallel axis theorem (e.g. I_glob = I_cent + [A] [y_c^2])
             Ixx += (dx * dy_rect**3) / 12 + area_rect * yc_rect**2
             Iyy += (dx**3 * dy_rect) / 12 + area_rect * xc_rect**2
 
-            # Drela's version of torsional rigidity
+            # Drela's version of St. Venant's torsional constant TODO: provide source?
+            # This link says this formula is the torsion constant for a rectangle of very low thickness-chord ratio
+            # https://en.wikipedia.org/wiki/Torsion_constant#cite_note-7:~:text=the%20side%20length.-,Rectangle,-%5Bedit%5D
             Jz += dy_rect**3 * dx / 3
 
         # Compute centroid
@@ -210,7 +217,8 @@ class AreaMomentsConstraint(GeometricConstraint):
 
             tempb = np.zeros_like(coords)
 
-            # x_top is not needed as its not used in anything. Its only function is to make sure x_top and x_bot are the same in x-value. This is why its not present here for derivatives.
+            # x_top is not needed as its not used in anything. Its only function is to make sure x_top and x_bot are the same in
+            # x-value. This is why its not present here for derivatives.
 
             # Chordwise coordinate
             x_bot = coords[i, :, 1, 0]
@@ -222,6 +230,7 @@ class AreaMomentsConstraint(GeometricConstraint):
             y_botb = np.zeros_like(y_bot)
             y_topb = np.zeros_like(y_top)
 
+            # GN: I don't know what's going on here
             self._evalAreaMomentsSection_b(x_bot, x_botb, y_top, y_topb, y_bot, y_botb, Ixxb, Iyyb, Jzb)
 
             # Set the derivatives in the global coordinate array for this slice
@@ -271,6 +280,7 @@ class AreaMomentsConstraint(GeometricConstraint):
         stack.append(yc)
         yc = yc / area
 
+        # GN: More comments here as to what is going on?
         areab = -(xc**2 * Iyyb) - yc**2 * Ixxb
         xcb = -(2 * xc * area * Iyyb)
         ycb = -(2 * yc * area * Ixxb)
@@ -365,8 +375,11 @@ class AreaMomentsConstraint(GeometricConstraint):
 
     def writeTecplot(self, handle):
         """
-        Writes the input coordinates that are used to compute the area moment values for slices. The representation is similar to a volume, but it does not capture the slices properly. Needs to be refactored to show the slices/rectangles used.
+        Writes the input coordinates that are used to compute the area moment values for slices.
+        The representation is similar to a volume, but it does not capture the slices properly. 
+        Needs to be refactored to show the slices/rectangles used.
         """
+        # GN: Should actually shade in the slice/rectangles used instead of the bounding box IMO
 
         x = self.coords.reshape([self.nSpan, self.nChord, 2, 3])
 

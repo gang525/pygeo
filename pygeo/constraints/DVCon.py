@@ -1754,7 +1754,7 @@ class DVConstraints:
         DVGeoName="default",
     ):
         r"""
-        Add a moments of area constraint (Ixx, Iyy, Jz) at each slice
+        Add moment of area constraints (Ixx, Iyy, Jz) at each slice
         along the span of a wing.
 
         Parameters
@@ -1769,12 +1769,13 @@ class DVConstraints:
 
         nSpan : int
             The number of constraints along the span to be (linearly)
-            interpolated *along* the leading and trailing edges
+            interpolated *along* the leading and trailing edges.
+            Minimum 2
 
         nChord : int
             The number of elements used to approximate area moments
             Ixx, Iyy, Jz. Will be linearly interpolated between the
-            leading and trailing edges
+            leading and trailing edges. More elements -> more accurate
 
         lower : float or dict
             The lower bound for the constraint.
@@ -1787,7 +1788,7 @@ class DVConstraints:
 
                 lower = 0.9
 
-            * Assign lower bound of 1.0 to just Iyy. Note that Ixx and Jz will have not get the default bounds, but have no bounds::
+            * Assign lower bound of 1.0 to just Iyy. Note that Ixx and Jz will not get the default bounds, but have no bounds::
 
                 lower = {"Iyy": 0.9}
 
@@ -1812,7 +1813,7 @@ class DVConstraints:
               widely used option.
 
             * scaled=False: No scaling is applied and the physical
-              volume. lower and upper refer to the physical volumes.
+              volume is used. lower and upper refer to the physical volumes.
 
         scale : float
             This is the optimization scaling of the
@@ -1869,6 +1870,7 @@ class DVConstraints:
         self.constraints[typeName][conName] = AreaMomentsConstraint(
             conName, nSpan, nChord, coords, lower, upper, scaled, scale, self.DVGeometries[DVGeoName], addToPyOpt
         )
+        # GN: If I give a dictionary with Ixx only, the other moments show up in the 'printSparsity()' call
 
     def addCompositeVolumeConstraint(
         self, vols, lower=1.0, upper=3.0, scaled=True, scale=1.0, name=None, addToPyOpt=True, DVGeoName="default"
